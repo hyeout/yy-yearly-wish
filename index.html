@@ -867,16 +867,31 @@
         document.addEventListener('touchend', () => { dragging = false; });
     })();
 
+    /* ===== API 설정 ===== */
+    const API_URL = "https://yy-yearly-wish-save.vercel.app/api/wishes";
+
     /* ===== 기존 기능 ===== */
-    let wishes = JSON.parse(localStorage.getItem('wishes_2026_v2')) || [];
+    let wishes = [];
     let currentEditIndex = -1;
     const currentMonth = new Date().getMonth() + 1;
 
-    function init() {
+    async function init() {
         applyTheme(currentTheme);
         initLayout();
-        renderWishes();
         updateProgress();
+        await loadWishes();
+    }
+
+    // API에서 전체 목표 가져오기
+    async function loadWishes() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            wishes = data.filter(w => w.text !== ""); // 빈 텍스트 행 필터링
+            renderWishes();
+        } catch (err) {
+            console.error("loadWishes error:", err);
+        }
     }
 
     function updateProgress() {
@@ -891,23 +906,40 @@
     function handleAddWish(event) { if (event.key === 'Enter') addWish(); }
     function addWishFromButton() { addWish(); }
 
-    function addWish() {
+    async function addWish() {
         const input = document.getElementById('add-wish-input');
         const val = input.value.trim();
-        if (val) {
-            wishes.push({ text: val, months: [] });
-            saveData();
+        if (!val) return;
+        input.value = '';
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: val })
+            });
+            const newWish = await res.json();
+            wishes.push(newWish);
             renderWishes(wishes.length - 1);
-            input.value = '';
+        } catch (err) {
+            console.error("addWish error:", err);
         }
     }
 
-    function deleteWish(index) {
+    async function deleteWish(index) {
+        const wish = wishes[index];
         wishes.splice(index, 1);
         if (currentEditIndex === index) closeKeypad();
         else if (currentEditIndex > index) currentEditIndex--;
-        saveData();
         renderWishes();
+        try {
+            await fetch(API_URL, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: wish.id })
+            });
+        } catch (err) {
+            console.error("deleteWish error:", err);
+        }
     }
 
     function createKeypad() {
@@ -952,13 +984,23 @@
         currentEditIndex = -1;
     }
 
-    function toggleMonth(month) {
+    async function toggleMonth(month) {
         if (currentEditIndex === -1) return;
         const months = wishes[currentEditIndex].months;
         const idx = months.indexOf(month);
         if (idx !== -1) months.splice(idx, 1);
         else { months.push(month); months.sort((a, b) => a - b); }
-        saveData();
+
+        // API에 월 업데이트
+        try {
+            await fetch(API_URL, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: wishes[currentEditIndex].id, months: months })
+            });
+        } catch (err) {
+            console.error("toggleMonth error:", err);
+        }
 
         // 키패드 버튼 즉시 업데이트
         document.querySelectorAll('.month-btn').forEach((btn, i) => {
@@ -1093,7 +1135,6 @@
         });
     }
 
-    function saveData() { localStorage.setItem('wishes_2026_v2', JSON.stringify(wishes)); }
 
     init();
 </script>

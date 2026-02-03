@@ -216,6 +216,19 @@
             background: var(--light);
         }
 
+        /* 카드 래퍼 (grid child 단위) */
+        .wish-item-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .wish-list.two-col .wish-item-wrap {
+            /* 키패드 열린 카드는 전체폭으로 강제 */
+        }
+        .wish-list.two-col .wish-item-wrap.keypad-open {
+            grid-column: 1 / -1;
+        }
+
         /* 키패드 */
         .month-keypad {
             padding: 10px;
@@ -320,24 +333,24 @@
             gap: 4px;
         }
         .wish-list.two-col .month-keypad {
-            grid-column: 1 / -1; /* 키패드는 항상 전체폭 */
+            /* grid-column 불필요 - wrapper가 처리 */
         }
 
-        /* ===== 테마 설정창 (Apple Style) ===== */
+        /* ===== 테마 설정창 (Apple Style + Compact + Draggable) ===== */
         .theme-panel {
             position: absolute;
             top: 36px;
             right: 0px;
-            background: rgba(255,255,255,0.92);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: saturate(1.8) blur(20px);
             -webkit-backdrop-filter: saturate(1.8) blur(20px);
-            border: 1px solid rgba(255,255,255,0.6);
-            border-radius: 18px;
-            padding: 20px 20px 22px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 10px 36px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0,0,0,0.04);
             z-index: 50;
             display: none;
-            width: 190px;
+            width: 185px;
         }
         .theme-panel.open {
             display: block;
@@ -348,37 +361,78 @@
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* 섹션 타이틀 — 가볍고 연하게 */
-        .panel-section-title {
+        /* 드래그 헤더 바 */
+        .panel-drag-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px 6px;
+            cursor: grab;
+            border-radius: 16px 16px 0 0;
+            user-select: none;
+        }
+        .panel-drag-bar:active { cursor: grabbing; }
+        .panel-drag-grip {
+            width: 24px;
+            height: 3px;
+            border-radius: 2px;
+            background: #ddd;
+            margin: 0 auto;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 6px;
+        }
+        .panel-drag-title {
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
             color: #999;
-            margin-bottom: 12px;
-            margin-top: 0;
+        }
+        .panel-close-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f0f0;
+            color: #999;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            padding: 0;
+            line-height: 1;
+        }
+        .panel-close-btn:hover { background: #e5e5e5; }
+
+        /* 본문 영역 */
+        .panel-body {
+            padding: 4px 14px 14px;
         }
 
-        /* 테마 원 행 — 수평 중앙 정렬 */
+        /* 테마 원 행 */
         .theme-grid {
             display: flex;
             justify-content: center;
-            gap: 18px;
+            gap: 14px;
+            padding: 6px 0 4px;
         }
         .theme-circle-wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 7px;
+            gap: 5px;
             cursor: pointer;
         }
         .theme-circle {
-            width: 34px;
-            height: 34px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             border: 2px solid rgba(0,0,0,0.06);
             transition: all 0.2s ease;
             position: relative;
         }
-        /* 활성: 테마색 테두리만 — ring 없이 조용하게 */
         .theme-circle-wrap.active .theme-circle {
             border-width: 2.5px;
             border-color: rgba(0,0,0,0.18);
@@ -386,44 +440,47 @@
         .theme-circle-wrap.active .theme-circle::after {
             content: '';
             position: absolute;
-            inset: -4.5px;
+            inset: -4px;
             border-radius: 50%;
             border: 2px solid rgba(0,0,0,0.15);
         }
         .theme-circle-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #aaa;
             font-weight: 500;
-            letter-spacing: 0.2px;
         }
         .theme-circle-wrap.active .theme-circle-label {
             color: #666;
             font-weight: 600;
         }
 
-        /* 구분선 — iOS 스타일 얇고 연한 회색 */
+        /* 구분선 */
         .panel-divider {
             height: 1px;
             background: #f0f0f0;
-            margin: 18px 0 16px;
+            margin: 8px 0;
         }
 
-        /* 색상 설정 행 — iOS 설정 앱 스타일 */
-        .color-row {
+        /* 색상 피커 행 — 3개를 한 줄로 */
+        .color-picker-row {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            height: 36px;
+            align-items: flex-end;
+            padding: 4px 2px;
+            gap: 4px;
         }
-        .color-row + .color-row {
-            border-top: 1px solid #f5f5f5;
+        .color-picker-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
         }
-        .color-row-label {
-            font-size: 13px;
-            color: #333;
-            font-weight: 400;
+        .color-picker-cell-label {
+            font-size: 9px;
+            color: #aaa;
+            font-weight: 500;
         }
-        /* 원형 색상 피커 */
         .color-input-wrap {
             position: relative;
             width: 28px;
@@ -453,11 +510,50 @@
             box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
         }
 
+        /* 리셋 버튼 */
+        .reset-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            padding: 5px 0 2px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 10px;
+            color: #bbb;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+        .reset-btn:hover { color: #888; }
+        .reset-btn svg {
+            width: 10px;
+            height: 10px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        /* 레이아웃 토글 행 — 컴팩트 */
+        .layout-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 2px;
+        }
+        .layout-row-label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 400;
+        }
+
         /* iOS 토글 스위치 */
         .toggle-wrap {
-            width: 42px;
-            height: 24px;
-            border-radius: 12px;
+            width: 38px;
+            height: 22px;
+            border-radius: 11px;
             background: #ddd;
             position: relative;
             cursor: pointer;
@@ -468,8 +564,8 @@
             background: var(--main);
         }
         .toggle-knob {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.15);
@@ -479,7 +575,7 @@
             transition: left 0.25s ease;
         }
         .toggle-wrap.on .toggle-knob {
-            left: 20px;
+            left: 18px;
         }
     </style>
 </head>
@@ -499,41 +595,60 @@
         </div>
     </div>
 
-    <!-- 테마 설정 창 (Apple Style) -->
+    <!-- 테마 설정 창 -->
     <div class="theme-panel" id="theme-panel">
-        <div class="panel-section-title">테마</div>
-        <div class="theme-grid" id="theme-grid"></div>
-
-        <div class="panel-divider"></div>
-        <div class="panel-section-title">색상 조정</div>
-        <div class="color-row">
-            <span class="color-row-label">기본색</span>
-            <div class="color-input-wrap">
-                <input type="color" class="color-input" id="color-main" oninput="onColorChange('main', this.value)">
-                <div class="color-preview" id="preview-main"></div>
-            </div>
-        </div>
-        <div class="color-row">
-            <span class="color-row-label">서브색</span>
-            <div class="color-input-wrap">
-                <input type="color" class="color-input" id="color-deep" oninput="onColorChange('deep', this.value)">
-                <div class="color-preview" id="preview-deep"></div>
-            </div>
-        </div>
-        <div class="color-row">
-            <span class="color-row-label">강조색</span>
-            <div class="color-input-wrap">
-                <input type="color" class="color-input" id="color-line" oninput="onColorChange('line', this.value)">
-                <div class="color-preview" id="preview-line"></div>
-            </div>
+        <!-- 드래그 헤더 -->
+        <div class="panel-drag-bar" id="panel-drag-bar">
+            <span class="panel-drag-title">설정</span>
+            <div class="panel-drag-grip"></div>
+            <button class="panel-close-btn" onclick="closeThemePanel()">×</button>
         </div>
 
-        <div class="panel-divider"></div>
-        <div class="panel-section-title">레이아웃</div>
-        <div class="color-row">
-            <span class="color-row-label">2열 정렬</span>
-            <div class="toggle-wrap" id="toggle-layout" onclick="toggleLayout()">
-                <div class="toggle-knob"></div>
+        <div class="panel-body">
+            <!-- 테마 원 -->
+            <div class="theme-grid" id="theme-grid"></div>
+
+            <div class="panel-divider"></div>
+
+            <!-- 색상 피커 3개 한 줄 -->
+            <div class="color-picker-row">
+                <div class="color-picker-cell">
+                    <span class="color-picker-cell-label">기본색</span>
+                    <div class="color-input-wrap">
+                        <input type="color" class="color-input" id="color-main" oninput="onColorChange('main', this.value)">
+                        <div class="color-preview" id="preview-main"></div>
+                    </div>
+                </div>
+                <div class="color-picker-cell">
+                    <span class="color-picker-cell-label">서브색</span>
+                    <div class="color-input-wrap">
+                        <input type="color" class="color-input" id="color-deep" oninput="onColorChange('deep', this.value)">
+                        <div class="color-preview" id="preview-deep"></div>
+                    </div>
+                </div>
+                <div class="color-picker-cell">
+                    <span class="color-picker-cell-label">강조색</span>
+                    <div class="color-input-wrap">
+                        <input type="color" class="color-input" id="color-line" oninput="onColorChange('line', this.value)">
+                        <div class="color-preview" id="preview-line"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 리셋 버튼 -->
+            <button class="reset-btn" onclick="resetThemeColors()">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                원본 색상 복원
+            </button>
+
+            <div class="panel-divider"></div>
+
+            <!-- 레이아웃 토글 -->
+            <div class="layout-row">
+                <span class="layout-row-label">2열 정렬</span>
+                <div class="toggle-wrap" id="toggle-layout" onclick="toggleLayout()">
+                    <div class="toggle-knob"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -562,17 +677,17 @@
         },
         lavender: {
             label: '라벤더',
-            main: '#D5CCEE',
-            deep: '#B8A8E0',
-            line: '#EBE7F5',
-            light: '#F6F4FB'
+            main: '#C4C8F0',
+            deep: '#A0A8E0',
+            line: '#E4E6F8',
+            light: '#F4F5FC'
         },
         sky: {
             label: '하늘색',
-            main: '#BDE4F0',
-            deep: '#85CCDF',
-            line: '#E3F2F8',
-            light: '#F4FAFC'
+            main: '#D8E0F8',
+            deep: '#B0BDE8',
+            line: '#EBF0FA',
+            light: '#F5F7FD'
         }
     };
 
@@ -679,7 +794,11 @@
     /* 테마 창 열기/닫기 */
     function toggleThemePanel(e) {
         e.stopPropagation();
-        document.getElementById('theme-panel').classList.toggle('open');
+        const panel = document.getElementById('theme-panel');
+        panel.classList.toggle('open');
+    }
+    function closeThemePanel() {
+        document.getElementById('theme-panel').classList.remove('open');
     }
     document.addEventListener('click', function(e) {
         const panel = document.getElementById('theme-panel');
@@ -687,6 +806,66 @@
             panel.classList.remove('open');
         }
     });
+
+    /* ===== 원본 색상 복원 ===== */
+    function resetThemeColors() {
+        delete colorOverrides[currentTheme];
+        localStorage.setItem('widget_color_overrides', JSON.stringify(colorOverrides));
+        applyTheme(currentTheme); // 오버라이드 없이 원본으로 적용
+    }
+
+    /* ===== 드래그 이동 ===== */
+    (function() {
+        const panel = document.getElementById('theme-panel');
+        const dragBar = document.getElementById('panel-drag-bar');
+        let dragging = false, startX, startY, origLeft, origTop;
+
+        dragBar.addEventListener('mousedown', (e) => {
+            // close 버튼 클릭 시 드래그 아님
+            if (e.target.closest('.panel-close-btn')) return;
+            e.preventDefault();
+            dragging = true;
+            panel.style.position = 'fixed';
+            // 현재 위치 기준으로 고정
+            const rect = panel.getBoundingClientRect();
+            origLeft = rect.left;
+            origTop = rect.top;
+            startX = e.clientX;
+            startY = e.clientY;
+            panel.style.left = origLeft + 'px';
+            panel.style.top = origTop + 'px';
+            panel.style.right = 'auto';
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
+            panel.style.left = (origLeft + e.clientX - startX) + 'px';
+            panel.style.top = (origTop + e.clientY - startY) + 'px';
+        });
+        document.addEventListener('mouseup', () => { dragging = false; });
+
+        // 터치 지원
+        dragBar.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.panel-close-btn')) return;
+            const t = e.touches[0];
+            dragging = true;
+            panel.style.position = 'fixed';
+            const rect = panel.getBoundingClientRect();
+            origLeft = rect.left;
+            origTop = rect.top;
+            startX = t.clientX;
+            startY = t.clientY;
+            panel.style.left = origLeft + 'px';
+            panel.style.top = origTop + 'px';
+            panel.style.right = 'auto';
+        }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            const t = e.touches[0];
+            panel.style.left = (origLeft + t.clientX - startX) + 'px';
+            panel.style.top = (origTop + t.clientY - startY) + 'px';
+        }, { passive: true });
+        document.addEventListener('touchend', () => { dragging = false; });
+    })();
 
     /* ===== 기존 기능 ===== */
     let wishes = JSON.parse(localStorage.getItem('wishes_2026_v2')) || [];
@@ -755,13 +934,21 @@
         if (currentEditIndex === index) { closeKeypad(); return; }
         closeKeypad();
         currentEditIndex = index;
-        const items = document.getElementById('wish-list').querySelectorAll('.wish-item');
-        items[index].after(createKeypad());
+        const wraps = document.getElementById('wish-list').querySelectorAll('.wish-item-wrap');
+        wraps.forEach(wrap => {
+            if (Number(wrap.dataset.wishIndex) === index) {
+                wrap.appendChild(createKeypad());
+                wrap.classList.add('keypad-open');
+            }
+        });
     }
 
     function closeKeypad() {
         const existing = document.getElementById('month-keypad');
-        if (existing) existing.remove();
+        if (existing) {
+            existing.parentElement.classList.remove('keypad-open');
+            existing.remove();
+        }
         currentEditIndex = -1;
     }
 
@@ -778,17 +965,16 @@
             btn.classList.toggle('selected', months.includes(i + 1));
         });
 
-        // 카드 전체 다시 렌더 (sorted 순서 불일치 방지)
+        // 카드 다시 렌더
         const editingIndex = currentEditIndex;
         renderWishes();
-        // 키패드 다시 열기 (같은 위치)
+        // 키패드 다시 열기 (data-wish-index로 정확한 wrap 찾기)
         currentEditIndex = editingIndex;
-        const items = document.getElementById('wish-list').querySelectorAll('.wish-item');
-        // sorted 순서로 찾아야 하므로 wish text로 매칭
-        const editingText = wishes[editingIndex].text;
-        items.forEach((item, i) => {
-            if (item.querySelector('.wish-text').innerText === editingText) {
-                item.after(createKeypad());
+        const wraps = document.getElementById('wish-list').querySelectorAll('.wish-item-wrap');
+        wraps.forEach(wrap => {
+            if (Number(wrap.dataset.wishIndex) === editingIndex) {
+                wrap.appendChild(createKeypad());
+                wrap.classList.add('keypad-open');
             }
         });
     }
@@ -832,7 +1018,12 @@
         if (sorted.length === 0) return;
 
         sorted.forEach(({ wish, index }) => {
-            const li = document.createElement('li');
+            // 래퍼
+            const wrap = document.createElement('li');
+            wrap.className = 'wish-item-wrap';
+            wrap.dataset.wishIndex = index;
+
+            const li = document.createElement('div');
             li.className = 'wish-item';
             if (index === popIndex) li.classList.add('pop');
             const isNow = wish.months.includes(currentMonth);
@@ -876,7 +1067,8 @@
 
             li.appendChild(left);
             li.appendChild(delBtn);
-            listEl.appendChild(li);
+            wrap.appendChild(li);
+            listEl.appendChild(wrap);
         });
     }
 

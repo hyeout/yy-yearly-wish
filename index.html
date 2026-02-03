@@ -911,6 +911,13 @@
         const val = input.value.trim();
         if (!val) return;
         input.value = '';
+
+        // UI 먼저 즉시 업데이트 (optimistic)
+        const tempWish = { id: 'temp_' + Date.now(), text: val, months: [] };
+        wishes.push(tempWish);
+        renderWishes(wishes.length - 1);
+
+        // 백그라운드에서 API 호출 후 실제 ID로 교체
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
@@ -918,10 +925,14 @@
                 body: JSON.stringify({ text: val })
             });
             const newWish = await res.json();
-            wishes.push(newWish);
-            renderWishes(wishes.length - 1);
+            // temp ID를 실제 ID로 교체
+            const idx = wishes.findIndex(w => w.id === tempWish.id);
+            if (idx !== -1) wishes[idx] = newWish;
         } catch (err) {
             console.error("addWish error:", err);
+            // 실패하면 되돌리기
+            wishes = wishes.filter(w => w.id !== tempWish.id);
+            renderWishes();
         }
     }
 
@@ -991,17 +1002,6 @@
         if (idx !== -1) months.splice(idx, 1);
         else { months.push(month); months.sort((a, b) => a - b); }
 
-        // API에 월 업데이트
-        try {
-            await fetch(API_URL, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: wishes[currentEditIndex].id, months: months })
-            });
-        } catch (err) {
-            console.error("toggleMonth error:", err);
-        }
-
         // 키패드 버튼 즉시 업데이트
         document.querySelectorAll('.month-btn').forEach((btn, i) => {
             btn.classList.toggle('selected', months.includes(i + 1));
@@ -1040,6 +1040,14 @@
             });
             card.querySelector('.wish-left').appendChild(tagsWrap);
         }
+
+        // 백그라운드에서 API 호출 (await 안함 → 즉시 응답)
+        const wishId = wishes[currentEditIndex].id;
+        fetch(API_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: wishId, months: months })
+        }).catch(err => console.error("toggleMonth error:", err));
     }
 
     /* ===== 레이아웃 토글 ===== */

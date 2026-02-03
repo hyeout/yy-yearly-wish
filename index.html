@@ -24,7 +24,7 @@
         .widget {
             background: #ffffff;
             border-radius: 18px;
-            padding: 18px 20px 16px 20px;
+            padding: 18px 16px 16px 16px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
             width: 100%;
             border: 1.5px solid var(--line);
@@ -32,6 +32,7 @@
             flex-direction: column;
             gap: 0;
             position: relative;
+            overflow: visible;
         }
 
         /* 헤더 */
@@ -109,18 +110,18 @@
         .wish-list { 
             list-style: none; 
             padding: 0; 
-            margin: 0 0 12px 0;
+            margin: 0 0 10px 0;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         /* 카드 스타일 위시 아이템 */
         .wish-item {
             background: white;
             border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 10px 10px 10px 12px;
+            border-radius: 8px;
+            padding: 7px 8px 7px 10px;
             display: flex; 
             align-items: center;
             justify-content: space-between;
@@ -144,7 +145,7 @@
         .wish-left {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             flex: 1;
             min-width: 0;
         }
@@ -312,6 +313,16 @@
             animation: cardFade 0.2s ease;
         }
 
+        /* 2열 레이아웃 모드 */
+        .wish-list.two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+        .wish-list.two-col .month-keypad {
+            grid-column: 1 / -1; /* 키패드는 항상 전체폭 */
+        }
+
         /* ===== 테마 설정창 (Apple Style) ===== */
         .theme-panel {
             position: absolute;
@@ -441,6 +452,35 @@
         .color-input-wrap:hover .color-preview {
             box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
         }
+
+        /* iOS 토글 스위치 */
+        .toggle-wrap {
+            width: 42px;
+            height: 24px;
+            border-radius: 12px;
+            background: #ddd;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.25s ease;
+            flex-shrink: 0;
+        }
+        .toggle-wrap.on {
+            background: var(--main);
+        }
+        .toggle-knob {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.25s ease;
+        }
+        .toggle-wrap.on .toggle-knob {
+            left: 20px;
+        }
     </style>
 </head>
 <body>
@@ -485,6 +525,15 @@
             <div class="color-input-wrap">
                 <input type="color" class="color-input" id="color-line" oninput="onColorChange('line', this.value)">
                 <div class="color-preview" id="preview-line"></div>
+            </div>
+        </div>
+
+        <div class="panel-divider"></div>
+        <div class="panel-section-title">레이아웃</div>
+        <div class="color-row">
+            <span class="color-row-label">2열 정렬</span>
+            <div class="toggle-wrap" id="toggle-layout" onclick="toggleLayout()">
+                <div class="toggle-knob"></div>
             </div>
         </div>
     </div>
@@ -645,7 +694,8 @@
     const currentMonth = new Date().getMonth() + 1;
 
     function init() {
-        applyTheme(currentTheme); // 테마 적용 + 피커 동기
+        applyTheme(currentTheme);
+        initLayout();
         renderWishes();
         updateProgress();
     }
@@ -722,41 +772,42 @@
         if (idx !== -1) months.splice(idx, 1);
         else { months.push(month); months.sort((a, b) => a - b); }
         saveData();
+
+        // 키패드 버튼 즉시 업데이트
         document.querySelectorAll('.month-btn').forEach((btn, i) => {
             btn.classList.toggle('selected', months.includes(i + 1));
         });
-        updateCards();
-    }
 
-    function updateCards() {
+        // 카드 전체 다시 렌더 (sorted 순서 불일치 방지)
+        const editingIndex = currentEditIndex;
+        renderWishes();
+        // 키패드 다시 열기 (같은 위치)
+        currentEditIndex = editingIndex;
         const items = document.getElementById('wish-list').querySelectorAll('.wish-item');
-        wishes.forEach((wish, index) => {
-            const item = items[index];
-            if (!item) return;
-            const isNow = wish.months.includes(currentMonth);
-            item.classList.toggle('is-now', isNow);
-            const oldBadge = item.querySelector('.now-badge');
-            if (oldBadge) oldBadge.remove();
-            if (isNow) {
-                const badge = document.createElement('span');
-                badge.className = 'now-badge';
-                badge.innerText = 'now';
-                item.querySelector('.wish-text-row').appendChild(badge);
-            }
-            const oldTags = item.querySelector('.wish-month-tags');
-            if (oldTags) oldTags.remove();
-            if (wish.months.length > 0) {
-                const tagsWrap = document.createElement('div');
-                tagsWrap.className = 'wish-month-tags';
-                wish.months.forEach(m => {
-                    const tag = document.createElement('span');
-                    tag.className = 'wish-month';
-                    tag.innerText = m + '月';
-                    tagsWrap.appendChild(tag);
-                });
-                item.querySelector('.wish-left').appendChild(tagsWrap);
+        // sorted 순서로 찾아야 하므로 wish text로 매칭
+        const editingText = wishes[editingIndex].text;
+        items.forEach((item, i) => {
+            if (item.querySelector('.wish-text').innerText === editingText) {
+                item.after(createKeypad());
             }
         });
+    }
+
+    /* ===== 레이아웃 토글 ===== */
+    let isTwoCol = localStorage.getItem('widget_layout') === 'two';
+
+    function initLayout() {
+        const toggle = document.getElementById('toggle-layout');
+        if (isTwoCol) {
+            toggle.classList.add('on');
+            document.getElementById('wish-list').classList.add('two-col');
+        }
+    }
+    function toggleLayout() {
+        isTwoCol = !isTwoCol;
+        localStorage.setItem('widget_layout', isTwoCol ? 'two' : 'one');
+        document.getElementById('toggle-layout').classList.toggle('on', isTwoCol);
+        document.getElementById('wish-list').classList.toggle('two-col', isTwoCol);
     }
 
     document.addEventListener('click', function(e) {
@@ -769,6 +820,9 @@
     function renderWishes(popIndex) {
         const listEl = document.getElementById('wish-list');
         listEl.innerHTML = '';
+        // 2열 모드 유지
+        if (isTwoCol) listEl.classList.add('two-col');
+        else listEl.classList.remove('two-col');
         const nowWishes = [], otherWishes = [];
         wishes.forEach((wish, index) => {
             if (wish.months.includes(currentMonth)) nowWishes.push({ wish, index });

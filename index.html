@@ -965,18 +965,39 @@
             btn.classList.toggle('selected', months.includes(i + 1));
         });
 
-        // 카드 다시 렌더
-        const editingIndex = currentEditIndex;
-        renderWishes();
-        // 키패드 다시 열기 (data-wish-index로 정확한 wrap 찾기)
-        currentEditIndex = editingIndex;
-        const wraps = document.getElementById('wish-list').querySelectorAll('.wish-item-wrap');
-        wraps.forEach(wrap => {
-            if (Number(wrap.dataset.wishIndex) === editingIndex) {
-                wrap.appendChild(createKeypad());
-                wrap.classList.add('keypad-open');
-            }
-        });
+        // 해당 카드만 제자리에서 업데이트 (키패드 손대지 않음)
+        const wrap = document.querySelector('.wish-item-wrap[data-wish-index="' + currentEditIndex + '"]');
+        if (!wrap) return;
+        const card = wrap.querySelector('.wish-item');
+        const isNow = months.includes(currentMonth);
+
+        // is-now 클래스
+        card.classList.toggle('is-now', isNow);
+
+        // now badge
+        const oldBadge = card.querySelector('.now-badge');
+        if (oldBadge) oldBadge.remove();
+        if (isNow) {
+            const badge = document.createElement('span');
+            badge.className = 'now-badge';
+            badge.innerText = 'now';
+            card.querySelector('.wish-text-row').appendChild(badge);
+        }
+
+        // 월 태그
+        const oldTags = card.querySelector('.wish-month-tags');
+        if (oldTags) oldTags.remove();
+        if (months.length > 0) {
+            const tagsWrap = document.createElement('div');
+            tagsWrap.className = 'wish-month-tags';
+            months.forEach(m => {
+                const tag = document.createElement('span');
+                tag.className = 'wish-month';
+                tag.innerText = m + '月';
+                tagsWrap.appendChild(tag);
+            });
+            card.querySelector('.wish-left').appendChild(tagsWrap);
+        }
     }
 
     /* ===== 레이아웃 토글 ===== */
